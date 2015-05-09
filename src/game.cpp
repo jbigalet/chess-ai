@@ -24,11 +24,13 @@ void Game::mouseReleaseEvent( QMouseEvent* event ){
     if( inBounds(tx, ty) ){
         if( selection_mode && selection_x == tx && selection_y == ty ){
             selection_mode = false;
-        } else if( !selection_mode && TYPE(board.state.board[tx][ty]) != T_EMPTY ) {
-            selection_mode = true;
-            selection_x = tx;
-            selection_y = ty;
+        } else if( !selection_mode ) {
             possible_moves = board.possibleMoves(tx, ty);
+            if( possible_moves.size() != 0 ){
+                selection_mode = true;
+                selection_x = tx;
+                selection_y = ty;
+            }
         } else if( selection_mode ) {
             Move* move = inPossibleMove(tx, ty);
             if( move != NULL ){
@@ -38,7 +40,7 @@ void Game::mouseReleaseEvent( QMouseEvent* event ){
             }
         }
     } else {
-        board.load();
+//        board.load();
     }
     repaint();
 }
@@ -57,7 +59,7 @@ void Game::paintEvent(QPaintEvent* pe){
                 painter.setBrush( QColor("yellow") );
             else
                 painter.setBrush( (i+j)%2 ? QColor("grey") : QColor("white") );
-            if( board.state.enpassant && board.state.enpassant_x == i && board.state.enpassant_y == j ) painter.setBrush(QColor("blue"));
+//            if( board.state.enpassant && board.state.enpassant_x == i && board.state.enpassant_y == j ) painter.setBrush(QColor("blue"));
             painter.drawRect( i*tile_size, j*tile_size, tile_size, tile_size);
 
             // piece
@@ -65,4 +67,14 @@ void Game::paintEvent(QPaintEvent* pe){
             if( TYPE(tile) != T_EMPTY )
                 painter.drawPixmap( i*tile_size, j*tile_size, tile_size, tile_size, pieces, 213*(TYPE(tile)-1), COLOR(tile) == C_WHITE ? 0 : 213, 213, 213);
         }
+
+
+    QString status = "Status: ";
+    if( board.state.status == S_NORMAL )
+        status += QString(board.state.white_to_play ? "White" : "Black") + " to play";
+    else
+        status += (board.state.status == S_MATE ? "Mate" : "Slatemate");
+
+    painter.setBrush( QColor("green") );
+    painter.drawText(height() + 20, 20, status);
 }

@@ -26,7 +26,13 @@ void Board::loadDefaultPosition() {
 QVector<Move> Board::possibleMoves(int x, int y, bool check){
     QVector<Move> moves;
 
+    if( state.status != S_NORMAL )
+        return moves;
+
     char color = COLOR(state.board[x][y]);
+    if( color != (state.white_to_play ? C_WHITE : C_BLACK) )
+        return moves;
+
     bool queen = false; // to easily handle queen = bishop + rook
 
     switch(TYPE(state.board[x][y])) {
@@ -188,18 +194,29 @@ QVector<Move> Board::possibleMoves(int x, int y, bool check){
 
 QVector<Move> Board::allPossibleMoves(bool check){
     QVector<Move> moves;
+
+    if( state.status != S_NORMAL )
+        return moves;
+
     for(int i=0 ; i<8 ; i++)
         for(int j=0 ; j<8 ; j++)
             foreach(Move move, possibleMoves(i, j, check))
                 moves.append(move);
+
     return moves;
 }
 
 bool Board::inCheck(char color){
+    bool tmp = state.white_to_play;
+    state.white_to_play = (color == C_BLACK);
+
+    bool res = false;
     foreach(Move m, allPossibleMoves(false))
         if( state.board[m.to_x][m.to_y] == (T_KING | color) )
-            return true;
-    return false;
+            res = true;
+
+    state.white_to_play = tmp;
+    return res;
 }
 
 bool Board::canGo(int x, int y, char color){
@@ -248,6 +265,21 @@ void Board::applyMove(Move move){
         if( move.from_y%7 == 0 && move.from_x%7 == 0 )
             state.can_castle[white ? 0 : 1][move.from_x/7] = false;
     }
+
+    state.white_to_play = !state.white_to_play;
+    updateStatus();
+}
+
+void Board::updateStatus() {
+    if( status_update )
+        return;
+
+    status_update = true;
+    if( allPossibleMoves().size() == 0 )
+        state.status = inCheck( state.white_to_play ? C_WHITE : C_BLACK ) ? S_MATE : S_SLATEMATE;
+    else
+        state.status = S_NORMAL;
+    status_update = false;
 }
 
 void Board::save(){

@@ -22,6 +22,10 @@
 #define TYPE(tile)  (tile & 0x0F)
 #define COLOR(tile) (tile & 0x10)
 
+#define S_NORMAL 0
+#define S_MATE 1
+#define S_SLATEMATE 2
+
 typedef struct Move {
     Move() {};
     Move(int fx, int fy, int tx, int ty): from_x(fx), from_y(fy), to_x(tx), to_y(ty), enpassant(false) {};
@@ -41,6 +45,9 @@ typedef struct State {
     int enpassant_y;
 
     bool can_castle[2][2]; // white/black & left/right
+
+    bool white_to_play = true;
+    char status = S_NORMAL;
 } State;
 
 class Board {
@@ -56,6 +63,9 @@ class Board {
         void load();
         bool canGo(int x, int y, char color);
         bool inCheck(char color);
+
+        bool status_update = false;
+        void updateStatus();
 
         State state;
         State saved_state;
