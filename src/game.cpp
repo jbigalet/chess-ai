@@ -54,6 +54,7 @@ void Game::paintEvent(QPaintEvent* pe){
                 painter.setBrush( QColor("yellow") );
             else
                 painter.setBrush( (i+j)%2 ? QColor("grey") : QColor("white") );
+            if( board.enpassant && board.enpassant_x == i && board.enpassant_y == j ) painter.setBrush(QColor("blue"));
             painter.drawRect( i*tile_size, j*tile_size, tile_size, tile_size);
 
             // piece

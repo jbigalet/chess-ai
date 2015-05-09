@@ -23,10 +23,14 @@
 #define COLOR(tile) (tile & 0x10)
 
 typedef struct Move {
+    Move() {};
+    Move(int fx, int fy, int tx, int ty): from_x(fx), from_y(fy), to_x(tx), to_y(ty), enpassant(false) {};
+
     int from_x;
     int from_y;
     int to_x;
     int to_y;
+    bool enpassant;
 } Move;
 
 class Board {
@@ -40,6 +44,12 @@ class Board {
         bool canGo(int x, int y, char color);
 
         char board[8][8];
+
+        bool enpassant = false; // last move was a pawn by 2
+        int enpassant_x;
+        int enpassant_y;
+
+        bool can_castle[2][2]; // white/black & left/right
 };
 
 inline bool inBounds(int x, int y){
