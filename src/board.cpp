@@ -23,13 +23,16 @@ void Board::loadDefaultPosition() {
     }
 }
 
-QVector<Move> Board::possibleMoves(int x, int y){
+QVector<Move> Board::possibleMoves(int x, int y, bool check){
     QVector<Move> moves;
 
     char color = COLOR(state.board[x][y]);
     bool queen = false; // to easily handle queen = bishop + rook
 
     switch(TYPE(state.board[x][y])) {
+        case T_EMPTY:
+            return moves;
+
         case T_KING:
             for(int i=-1 ; i<=1 ; i++)
                 for(int j=-1 ; j<=1 ; j++)
@@ -142,7 +145,61 @@ QVector<Move> Board::possibleMoves(int x, int y){
             break;
     }
 
+    // filter moves to remove the one putting the king in check
+    // TODO atm dumb way: go through all the next possible move & check if one can take the king
+    if( check ){
+        QVector<Move> filtered_moves;
+
+        foreach(Move move, moves){
+            save();
+            applyMove(move);
+            if( !inCheck(color) )
+                filtered_moves.append(move);
+            load();
+        }
+
+        // special case for king: if castling, the castling move only still exists if
+        // the 1 case towards the rook exists (unable to castle if in check during the king's travel)
+        // + need not to be in check
+        if( TYPE(state.board[x][y]) == T_KING )
+            for(int index=0 ; index<filtered_moves.size() ; index++){
+                Move move = filtered_moves[index];
+                if( abs(move.to_x-move.from_x) == 2 ){
+                    int target = move.from_x + (move.to_x-move.from_x)/2;
+                    bool possible = false;
+                    foreach(Move m, filtered_moves)
+                        if( m.to_x == target && m.to_y == move.to_y ){
+                            possible = true;
+                            break;
+                        }
+
+                    if( !possible || inCheck(color) ){
+                        filtered_moves.remove(index);
+                        index--;
+                    }
+                }
+            }
+
+        return filtered_moves;
+    }
+
     return moves;
+}
+
+QVector<Move> Board::allPossibleMoves(bool check){
+    QVector<Move> moves;
+    for(int i=0 ; i<8 ; i++)
+        for(int j=0 ; j<8 ; j++)
+            foreach(Move move, possibleMoves(i, j, check))
+                moves.append(move);
+    return moves;
+}
+
+bool Board::inCheck(char color){
+    foreach(Move m, allPossibleMoves(false))
+        if( state.board[m.to_x][m.to_y] == (T_KING | color) )
+            return true;
+    return false;
 }
 
 bool Board::canGo(int x, int y, char color){

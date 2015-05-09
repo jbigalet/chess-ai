@@ -49,11 +49,13 @@ class Board {
         ~Board() {};
 
         void loadDefaultPosition();
-        QVector<Move> possibleMoves(int x, int y);
+        QVector<Move> allPossibleMoves(bool check=true);
+        QVector<Move> possibleMoves(int x, int y, bool check=true);
         void applyMove(Move move);
         void save();
         void load();
         bool canGo(int x, int y, char color);
+        bool inCheck(char color);
 
         State state;
         State saved_state;
