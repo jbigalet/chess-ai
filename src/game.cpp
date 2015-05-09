@@ -24,7 +24,7 @@ void Game::mouseReleaseEvent( QMouseEvent* event ){
     if( inBounds(tx, ty) ){
         if( selection_mode && selection_x == tx && selection_y == ty ){
             selection_mode = false;
-        } else if( !selection_mode && TYPE(board.board[tx][ty]) != T_EMPTY ) {
+        } else if( !selection_mode && TYPE(board.state.board[tx][ty]) != T_EMPTY ) {
             selection_mode = true;
             selection_x = tx;
             selection_y = ty;
@@ -32,12 +32,15 @@ void Game::mouseReleaseEvent( QMouseEvent* event ){
         } else if( selection_mode ) {
             Move* move = inPossibleMove(tx, ty);
             if( move != NULL ){
+                board.save();
                 board.applyMove(*move);
                 selection_mode = false;
             }
         }
-        repaint();
+    } else {
+        board.load();
     }
+    repaint();
 }
 
 void Game::paintEvent(QPaintEvent* pe){
@@ -54,11 +57,11 @@ void Game::paintEvent(QPaintEvent* pe){
                 painter.setBrush( QColor("yellow") );
             else
                 painter.setBrush( (i+j)%2 ? QColor("grey") : QColor("white") );
-            if( board.enpassant && board.enpassant_x == i && board.enpassant_y == j ) painter.setBrush(QColor("blue"));
+            if( board.state.enpassant && board.state.enpassant_x == i && board.state.enpassant_y == j ) painter.setBrush(QColor("blue"));
             painter.drawRect( i*tile_size, j*tile_size, tile_size, tile_size);
 
             // piece
-            char tile = board.board[i][j];
+            char tile = board.state.board[i][j];
             if( TYPE(tile) != T_EMPTY )
                 painter.drawPixmap( i*tile_size, j*tile_size, tile_size, tile_size, pieces, 213*(TYPE(tile)-1), COLOR(tile) == C_WHITE ? 0 : 213, 213, 213);
         }

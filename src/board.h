@@ -33,6 +33,16 @@ typedef struct Move {
     bool enpassant;
 } Move;
 
+typedef struct State {
+    char board[8][8];
+
+    bool enpassant = false; // last move was a pawn by 2
+    int enpassant_x;
+    int enpassant_y;
+
+    bool can_castle[2][2]; // white/black & left/right
+} State;
+
 class Board {
     public:
         Board();
@@ -41,15 +51,12 @@ class Board {
         void loadDefaultPosition();
         QVector<Move> possibleMoves(int x, int y);
         void applyMove(Move move);
+        void save();
+        void load();
         bool canGo(int x, int y, char color);
 
-        char board[8][8];
-
-        bool enpassant = false; // last move was a pawn by 2
-        int enpassant_x;
-        int enpassant_y;
-
-        bool can_castle[2][2]; // white/black & left/right
+        State state;
+        State saved_state;
 };
 
 inline bool inBounds(int x, int y){

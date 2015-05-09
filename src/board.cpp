@@ -2,8 +2,8 @@
 #include "board.h"
 
 Board::Board() {
-    memset(board, 0, 64);
-    memset(can_castle, 1, 4);
+    memset(state.board, 0, 64);
+    memset(state.can_castle, 1, 4);
 }
 
 void Board::loadDefaultPosition() {
@@ -13,23 +13,23 @@ void Board::loadDefaultPosition() {
 
         // pawns
         for( int i=0 ; i<8 ; i++ )
-            board[i][1+color*5] = T_PAWN | c;
+            state.board[i][1+color*5] = T_PAWN | c;
 
-        board[0][r] = board[7][r] = T_ROOK | c;
-        board[1][r] = board[6][r] = T_KNIGHT | c;
-        board[2][r] = board[5][r] = T_BISHOP | c;
-        board[3][r] = T_QUEEN | c;
-        board[4][r] = T_KING | c;
+        state.board[0][r] = state.board[7][r] = T_ROOK | c;
+        state.board[1][r] = state.board[6][r] = T_KNIGHT | c;
+        state.board[2][r] = state.board[5][r] = T_BISHOP | c;
+        state.board[3][r] = T_QUEEN | c;
+        state.board[4][r] = T_KING | c;
     }
 }
 
 QVector<Move> Board::possibleMoves(int x, int y){
     QVector<Move> moves;
 
-    char color = COLOR(board[x][y]);
+    char color = COLOR(state.board[x][y]);
     bool queen = false; // to easily handle queen = bishop + rook
 
-    switch(TYPE(board[x][y])) {
+    switch(TYPE(state.board[x][y])) {
         case T_KING:
             for(int i=-1 ; i<=1 ; i++)
                 for(int j=-1 ; j<=1 ; j++)
@@ -40,10 +40,10 @@ QVector<Move> Board::possibleMoves(int x, int y){
 
             // castling
             for(int i=0 ; i<=1 ; i++) // left then right
-                if( can_castle[color == C_WHITE ? 0 : 1][i] ){
+                if( state.can_castle[color == C_WHITE ? 0 : 1][i] ){
                     bool open = true;
                     for(int j=1+5*i ; j!=4 ; j+=1-2*i)
-                        if( board[j][y] != T_EMPTY ){
+                        if( state.board[j][y] != T_EMPTY ){
                             open = false;
                             break;
                         }
@@ -65,7 +65,7 @@ QVector<Move> Board::possibleMoves(int x, int y){
                     while( canGo(a, b, color) ){
                         Move m = { x, y, a, b };
                         moves.append(m);
-                        if( TYPE(board[a][b]) != T_EMPTY )
+                        if( TYPE(state.board[a][b]) != T_EMPTY )
                             break;
                         a += sx;
                         b += sy;
@@ -81,7 +81,7 @@ QVector<Move> Board::possibleMoves(int x, int y){
                 while( canGo(a, y, color) ){
                     Move m = { x, y, a, y };
                     moves.append(m);
-                    if( TYPE(board[a][y]) != T_EMPTY )
+                    if( TYPE(state.board[a][y]) != T_EMPTY )
                         break;
                     a += sign;
                 }
@@ -91,7 +91,7 @@ QVector<Move> Board::possibleMoves(int x, int y){
                 while( canGo(x, b, color) ){
                     Move m = { x, y, x, b };
                     moves.append(m);
-                    if( TYPE(board[x][b]) != T_EMPTY )
+                    if( TYPE(state.board[x][b]) != T_EMPTY )
                         break;
                     b += sign;
                 }
@@ -115,12 +115,12 @@ QVector<Move> Board::possibleMoves(int x, int y){
             int orientation = color ? 1 : -1;
 
             // straight
-            if( TYPE(board[x][y+orientation]) == T_EMPTY ){
+            if( TYPE(state.board[x][y+orientation]) == T_EMPTY ){
                 Move m = { x, y, x, y+orientation };
                 moves.append(m);
 
                 // 2nd row: can move 2
-                if( (y-orientation)%7 == 0  && TYPE(board[x][y+2*orientation]) == T_EMPTY ){
+                if( (y-orientation)%7 == 0  && TYPE(state.board[x][y+2*orientation]) == T_EMPTY ){
                     Move m2 = { x, y, x, y+2*orientation };
                     moves.append(m2);
                 }
@@ -129,11 +129,11 @@ QVector<Move> Board::possibleMoves(int x, int y){
             // diag eat
             for(int sign=-1 ; sign<=1 ; sign+=2)
                 if( inBounds(x+sign, y+orientation) ){
-                    char tile = board[x+sign][y+orientation];
+                    char tile = state.board[x+sign][y+orientation];
                     if( TYPE(tile) != T_EMPTY && COLOR(tile) != color ) {
                         Move m3 = { x, y, x+sign, y+orientation };
                         moves.append(m3);
-                    } else if( enpassant && TYPE(tile) == T_EMPTY && enpassant_x == x+sign && enpassant_y == y ) {
+                    } else if( state.enpassant && TYPE(tile) == T_EMPTY && state.enpassant_x == x+sign && state.enpassant_y == y ) {
                         Move m3 = { x, y, x+sign, y+orientation };
                         m3.enpassant = true;
                         moves.append(m3);
@@ -146,49 +146,57 @@ QVector<Move> Board::possibleMoves(int x, int y){
 }
 
 bool Board::canGo(int x, int y, char color){
-    return inBounds(x, y) && isEatable(board[x][y], color);
+    return inBounds(x, y) && isEatable(state.board[x][y], color);
 }
 
 void Board::applyMove(Move move){
-    enpassant = false; // reset the enpassant status
+    state.enpassant = false; // reset the state.enpassant status
 
     // we assume its legal
-    board[move.to_x][move.to_y] = board[move.from_x][move.from_y];
-    board[move.from_x][move.from_y] = T_EMPTY;
+    state.board[move.to_x][move.to_y] = state.board[move.from_x][move.from_y];
+    state.board[move.from_x][move.from_y] = T_EMPTY;
 
-    bool white = COLOR(board[move.to_x][move.to_y]) == C_WHITE;
+    bool white = COLOR(state.board[move.to_x][move.to_y]) == C_WHITE;
 
-    if( TYPE(board[move.to_x][move.to_y]) == T_PAWN ){
+    if( TYPE(state.board[move.to_x][move.to_y]) == T_PAWN ){
         // pawn promotion @TODO
         if( move.to_y%7 == 0 )
-            board[move.to_x][move.to_y] = T_QUEEN | COLOR(board[move.to_x][move.to_y]);
+            state.board[move.to_x][move.to_y] = T_QUEEN | COLOR(state.board[move.to_x][move.to_y]);
 
         // move is en passant: we need to remove the corresponding pawn
         if( move.enpassant )
-            board[enpassant_x][enpassant_y] = T_EMPTY;
+            state.board[state.enpassant_x][state.enpassant_y] = T_EMPTY;
 
         // en passant will be available
         if( abs(move.from_y-move.to_y) == 2 ){
-            enpassant = true;
-            enpassant_x = move.to_x;
-            enpassant_y = move.to_y;
+            state.enpassant = true;
+            state.enpassant_x = move.to_x;
+            state.enpassant_y = move.to_y;
         }
 
-    } else if( TYPE(board[move.to_x][move.to_y]) == T_KING ){
+    } else if( TYPE(state.board[move.to_x][move.to_y]) == T_KING ){
         // if castling, need to move the rook
         if( abs(move.from_x-move.to_x) == 2 ){
             int sign = (move.from_x-move.to_x)/2;
-            board[move.to_x+sign][move.to_y] = board[(1-sign)*7/2][move.to_y];
-            board[(1-sign)*7/2][move.to_y] = T_EMPTY;
+            state.board[move.to_x+sign][move.to_y] = state.board[(1-sign)*7/2][move.to_y];
+            state.board[(1-sign)*7/2][move.to_y] = T_EMPTY;
         }
 
         // king moved: cant castle anymore
-        can_castle[white ? 0 : 1][0] = false;
-        can_castle[white ? 0 : 1][1] = false;
+        state.can_castle[white ? 0 : 1][0] = false;
+        state.can_castle[white ? 0 : 1][1] = false;
 
-    } else if( TYPE(board[move.to_x][move.to_y]) == T_ROOK) {
+    } else if( TYPE(state.board[move.to_x][move.to_y]) == T_ROOK) {
         // rook moved: cant castle with this one anymore
         if( move.from_y%7 == 0 && move.from_x%7 == 0 )
-            can_castle[white ? 0 : 1][move.from_x/7] = false;
+            state.can_castle[white ? 0 : 1][move.from_x/7] = false;
     }
+}
+
+void Board::save(){
+    saved_state = state;
+}
+
+void Board::load(){
+    state = saved_state;
 }
