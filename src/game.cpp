@@ -1,14 +1,29 @@
 #include <QDebug>
 #include "game.h"
+#include "player.h"
+#include "humanPlayer.h"
+#include "AIPlayer.h"
 
 Game::Game() {
-    board.loadDefaultPosition();
-
     pieces.load("pieces.png");
 }
 
 Game::~Game() {
 
+}
+
+void Game::init(){
+    board.loadDefaultPosition();
+
+    Player* p1 = new HumanPlayer();
+    Player* p2 = new HumanPlayer();
+
+    while( board.state.status == S_NORMAL ){
+        if( board.state.white_to_play )
+            board.applyMove(p1->getMove());
+        else
+            board.applyMove(p2->getMove());
+    }
 }
 
 int Game::inPossibleMove(int x, int y){
