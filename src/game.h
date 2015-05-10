@@ -14,7 +14,7 @@ class Game: public QWidget {
         Game();
         ~Game();
 
-        Move* inPossibleMove(int x, int y);
+        int inPossibleMove(int x, int y);
         void paintEvent(QPaintEvent*);
         void mouseReleaseEvent(QMouseEvent*);
 

@@ -11,11 +11,13 @@ Game::~Game() {
 
 }
 
-Move* Game::inPossibleMove(int x, int y){
-    foreach(Move m, possible_moves)
+int Game::inPossibleMove(int x, int y){
+    for(int i=0 ; i<possible_moves.size() ; i++){
+        Move m = possible_moves[i];
         if( m.to_x == x && m.to_y == y )
-            return &m;
-    return NULL;
+            return i;
+    }
+    return -1;
 }
 
 void Game::mouseReleaseEvent( QMouseEvent* event ){
@@ -32,10 +34,10 @@ void Game::mouseReleaseEvent( QMouseEvent* event ){
                 selection_y = ty;
             }
         } else if( selection_mode ) {
-            Move* move = inPossibleMove(tx, ty);
-            if( move != NULL ){
-                board.save();
-                board.applyMove(*move);
+            int imove = inPossibleMove(tx, ty);
+            if( imove != -1 ){
+//                board.save();
+                board.applyMove(possible_moves[imove]);
                 selection_mode = false;
             }
         }
@@ -55,7 +57,7 @@ void Game::paintEvent(QPaintEvent* pe){
             // tile color
             if( selection_mode && selection_x == i && selection_y == j )
                 painter.setBrush( QColor("pink") );
-            else if( selection_mode && inPossibleMove(i, j) != NULL )
+            else if( selection_mode && inPossibleMove(i, j) != -1 )
                 painter.setBrush( QColor("yellow") );
             else
                 painter.setBrush( (i+j)%2 ? QColor("grey") : QColor("white") );
@@ -73,7 +75,7 @@ void Game::paintEvent(QPaintEvent* pe){
     if( board.state.status == S_NORMAL )
         status += QString(board.state.white_to_play ? "White" : "Black") + " to play";
     else
-        status += (board.state.status == S_MATE ? "Mate" : "Slatemate");
+        status += (board.state.status == S_MATE ? "Mate" : "Stalemate");
 
     painter.setBrush( QColor("green") );
     painter.drawText(height() + 20, 20, status);

@@ -276,16 +276,17 @@ void Board::updateStatus() {
 
     status_update = true;
     if( allPossibleMoves().size() == 0 )
-        state.status = inCheck( state.white_to_play ? C_WHITE : C_BLACK ) ? S_MATE : S_SLATEMATE;
+        state.status = inCheck( state.white_to_play ? C_WHITE : C_BLACK ) ? S_MATE : S_STALEMATE;
     else
         state.status = S_NORMAL;
     status_update = false;
 }
 
 void Board::save(){
-    saved_state = state;
+    saved_states.push(state);
 }
 
 void Board::load(){
-    state = saved_state;
+    if( !saved_states.isEmpty() )
+        state = saved_states.pop();
 }

@@ -2,6 +2,7 @@
 #define DEF_BOARD 
 
 #include <QVector>
+#include <QStack>
 
 // the board is defined by a char[8][8], where each char is a tile
 // a tile is either empty or contains a piece:
@@ -24,7 +25,7 @@
 
 #define S_NORMAL 0
 #define S_MATE 1
-#define S_SLATEMATE 2
+#define S_STALEMATE 2
 
 typedef struct Move {
     Move() {};
@@ -68,7 +69,7 @@ class Board {
         void updateStatus();
 
         State state;
-        State saved_state;
+        QStack<State> saved_states;
 };
 
 inline bool inBounds(int x, int y){
