@@ -4,9 +4,9 @@
 #include "board.h"
 #include "player.h"
 
-class AIPlayer {
+class AIPlayer: public Player {
     public:
-        AIPlayer() {};
+        AIPlayer(): Player(false) {};
         ~AIPlayer() {};
 
         Move getMove();

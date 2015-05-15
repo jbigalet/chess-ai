@@ -8,6 +8,7 @@
 #include <QVector>
 #include <QPoint>
 #include "board.h"
+#include "player.h"
 
 class Game: public QWidget {
     public:
@@ -26,6 +27,9 @@ class Game: public QWidget {
         int selection_x;
         int selection_y;
         QVector<Move> possible_moves;
+
+        Player* white_player;
+        Player* black_player;
 };
 
 #endif /* DEF_GAME */

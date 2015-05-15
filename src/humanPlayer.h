@@ -6,10 +6,14 @@
 
 class HumanPlayer: public Player {
     public:
-        HumanPlayer() {};
+        HumanPlayer(): Player(true) {};
         ~HumanPlayer() {};
 
         Move getMove();
+        void inputMove(Move m);
+
+        bool move_available = false;
+        Move move_to_send;
 };
 
 #endif /* DEF_HUMANPLAYER */

@@ -6,9 +6,13 @@
 class Player {
     public:
         Player() {};
+        Player(bool ni): needs_input(ni) {};
         ~Player() {};
 
         virtual Move getMove();
+        virtual void inputMove(Move m) {};
+
+        bool needs_input;
 };
 
 #endif /* DEF_PLAYER */

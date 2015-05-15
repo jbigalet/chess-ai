@@ -1,4 +1,5 @@
 #include <QDebug>
+#include <QCoreApplication>
 #include "game.h"
 #include "player.h"
 #include "humanPlayer.h"
@@ -6,6 +7,12 @@
 
 Game::Game() {
     pieces.load("pieces.png");
+
+    white_player = new HumanPlayer();
+//    white_player = new AIPlayer();
+
+    black_player = new HumanPlayer();
+//    black_player = new AIPlayer();
 }
 
 Game::~Game() {
@@ -15,15 +22,17 @@ Game::~Game() {
 void Game::init(){
     board.loadDefaultPosition();
 
-    Player* p1 = new HumanPlayer();
-    Player* p2 = new HumanPlayer();
-
     while( board.state.status == S_NORMAL ){
+        QCoreApplication::processEvents(); // keep the GUI smooth
+        repaint();
+
         if( board.state.white_to_play )
-            board.applyMove(p1->getMove());
+            board.applyMove(white_player->getMove());
         else
-            board.applyMove(p2->getMove());
+            board.applyMove(black_player->getMove());
     }
+
+    repaint();
 }
 
 int Game::inPossibleMove(int x, int y){
@@ -36,29 +45,35 @@ int Game::inPossibleMove(int x, int y){
 }
 
 void Game::mouseReleaseEvent( QMouseEvent* event ){
+    Player* p = (board.state.white_to_play ? white_player : black_player);
+
+    if( board.state.status != S_NORMAL || !p->needs_input )
+        return;
+
     int tx = event->x()/(height() / 8.0f);
     int ty = event->y()/(height() / 8.0f);
-    if( inBounds(tx, ty) ){
-        if( selection_mode && selection_x == tx && selection_y == ty ){
-            selection_mode = false;
-        } else if( !selection_mode ) {
-            possible_moves = board.possibleMoves(tx, ty);
-            if( possible_moves.size() != 0 ){
-                selection_mode = true;
-                selection_x = tx;
-                selection_y = ty;
-            }
-        } else if( selection_mode ) {
-            int imove = inPossibleMove(tx, ty);
-            if( imove != -1 ){
-//                board.save();
-                board.applyMove(possible_moves[imove]);
-                selection_mode = false;
-            }
+    if( !inBounds(tx, ty) )
+        return;
+
+    if( selection_mode && selection_x == tx && selection_y == ty ){
+        selection_mode = false;
+
+    } else if( !selection_mode ) {
+        possible_moves = board.possibleMoves(tx, ty);
+        if( possible_moves.size() != 0 ){
+            selection_mode = true;
+            selection_x = tx;
+            selection_y = ty;
         }
-    } else {
-//        board.load();
+
+    } else if( selection_mode ) {
+        int imove = inPossibleMove(tx, ty);
+        if( imove != -1 ){
+            p->inputMove(possible_moves[imove]);
+            selection_mode = false;
+        }
     }
+
     repaint();
 }
 
