@@ -6,10 +6,12 @@
 
 class AIPlayer: public Player {
     public:
-        AIPlayer(): Player(false) {};
+        AIPlayer(Board* board): Player(false), board(board) {};
         ~AIPlayer() {};
 
         Move getMove();
+
+        Board* board;
 };
 
 #endif /* DEF_AIPLAYER */

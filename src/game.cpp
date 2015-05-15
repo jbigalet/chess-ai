@@ -6,13 +6,15 @@
 #include "AIPlayer.h"
 
 Game::Game() {
+    qsrand(10);
+
     pieces.load("pieces.png");
 
-    white_player = new HumanPlayer();
-//    white_player = new AIPlayer();
+//    white_player = new HumanPlayer();
+    white_player = new AIPlayer(&board);
 
-    black_player = new HumanPlayer();
-//    black_player = new AIPlayer();
+//    black_player = new HumanPlayer();
+    black_player = new AIPlayer(&board);
 }
 
 Game::~Game() {
